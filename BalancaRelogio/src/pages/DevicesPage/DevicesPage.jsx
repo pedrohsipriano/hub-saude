@@ -1,4 +1,4 @@
-// Aba Aparelhos: balança e relógio em sub-abas (as conexões continuam ativas ao trocar).
+// Aba Aparelhos: relógio e balança em sub-abas (as conexões continuam ativas ao trocar). O relógio vem primeiro.
 import { useState } from 'react'
 import SubNav from '../../components/SubNav/SubNav.jsx'
 import ui from '../../styles/controls.module.css'
@@ -6,8 +6,8 @@ import MeasurePage from '../MeasurePage/MeasurePage.jsx'
 import WatchPage from '../WatchPage/WatchPage.jsx'
 
 const SECTIONS = [
-  { id: 'scale', label: 'Balança' },
   { id: 'watch', label: 'Relógio' },
+  { id: 'scale', label: 'Balança' },
 ]
 
 /**
@@ -21,7 +21,7 @@ const SECTIONS = [
  * @param {() => void} props.onEditProfile
  */
 export default function DevicesPage({ scale, watch, user, users, watchOwner, onWatchOwnerChange, onEditProfile }) {
-  const [section, setSection] = useState('scale')
+  const [section, setSection] = useState('watch')
   return (
     <section>
       <h2 className={ui.pageTitle}>Aparelhos</h2>

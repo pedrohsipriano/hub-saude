@@ -431,6 +431,9 @@ public class WatchService extends Service {
         setState(STATE_CONNECTED);
         write(NjjFrames.phoneType());
         write(NjjFrames.time(System.currentTimeMillis()));
+        // Lembretes do app no relógio: desliga o lembrete de água próprio dele (tocava fora de hora, 3 ou 4 vezes
+        // a cada lembrete do celular). O do celular é repassado na mesma hora pelo HubNotificationListener.
+        if (WatchPrefs.remindersOnWatch(this)) write(NjjFrames.drinkWater(false));
         handler.removeCallbacks(heartbeat);
         handler.postDelayed(heartbeat, HEARTBEAT_MS);
     }

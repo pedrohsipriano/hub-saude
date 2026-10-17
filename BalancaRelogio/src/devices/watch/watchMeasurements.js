@@ -53,14 +53,32 @@ export function watchSyncToMeasurement(data, userId) {
   })
 
   // Sono: registrado no horário em que a pessoa acordou.
-  if (data.sleep) {
-    add('sleepMinutes', data.sleep.asleepMinutes, 'min', data.sleep.endMs)
-    add('sleepDeepMinutes', data.sleep.deepMinutes, 'min', data.sleep.endMs)
-    add('sleepLightMinutes', data.sleep.lightMinutes, 'min', data.sleep.endMs)
-    add('sleepAwakeMinutes', data.sleep.awakeMinutes, 'min', data.sleep.endMs)
-  }
+  if (data.sleep) addSleepMetrics(add, data.sleep)
 
   return { userId, device: WATCH_DEVICE, timestamp: data.syncedAt, metrics }
+}
+
+/** Métricas de uma noite, todas no horário em que a pessoa acordou. */
+function addSleepMetrics(add, sleep) {
+  add('sleepMinutes', sleep.asleepMinutes, 'min', sleep.endMs)
+  add('sleepDeepMinutes', sleep.deepMinutes, 'min', sleep.endMs)
+  add('sleepLightMinutes', sleep.lightMinutes, 'min', sleep.endMs)
+  add('sleepAwakeMinutes', sleep.awakeMinutes, 'min', sleep.endMs)
+  // Horário em que pegou no sono (epoch ms): início exato da sessão no Health Connect e na tela do relógio.
+  if (sleep.startMs) add('sleepStart', sleep.startMs, 'ms', sleep.endMs)
+}
+
+/**
+ * Várias noites de sono num evento só (as que o relógio manda de uma vez e as recuperadas da cópia local).
+ * @param {Array<object>} nights - de parseSleep()
+ * @param {string} userId
+ * @param {number} [now]
+ */
+export function sleepNightsToMeasurement(nights, userId, now = Date.now()) {
+  const metrics = []
+  const add = (metric, value, unit, timestamp) => metrics.push({ metric, value, unit, timestamp })
+  for (const night of nights) addSleepMetrics(add, night)
+  return { userId, device: WATCH_DEVICE, timestamp: now, metrics }
 }
 
 /**

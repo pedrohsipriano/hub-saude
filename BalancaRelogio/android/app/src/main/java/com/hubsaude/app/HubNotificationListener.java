@@ -21,6 +21,8 @@ public class HubNotificationListener extends NotificationListenerService {
 
     // Tipos de ícone do relógio usados diretamente aqui (os demais vêm do mapa do app).
     private static final int TYPE_INCOMING_CALL = 1;
+    // Canais dos lembretes do app (src/reminders/reminders.js, CHANNEL_PREFIX).
+    private static final String REMINDER_CHANNEL_PREFIX = "hub-lembretes-";
 
     /** Última notificação enviada de cada chave (evita repetir a mesma mensagem quando o app a atualiza). */
     private static final Map<String, String> lastSent = new LinkedHashMap<String, String>(64, 0.75f, true) {
@@ -34,8 +36,12 @@ public class HubNotificationListener extends NotificationListenerService {
     public void onNotificationPosted(StatusBarNotification sbn) {
         if (sbn == null) return;
         String packageName = sbn.getPackageName();
-        // As do próprio app (lembretes, "Conectado ao relógio") não vão para o relógio.
-        if (getPackageName().equals(packageName)) return;
+        // Do próprio app, só os lembretes (água, refeições, pesagem) vão para o relógio, na mesma hora do celular.
+        // As fixas ("Conectado ao relógio", treino) não vão.
+        if (getPackageName().equals(packageName)) {
+            forwardReminder(sbn);
+            return;
+        }
 
         Notification notification = sbn.getNotification();
         if (notification == null) return;
@@ -96,6 +102,32 @@ public class HubNotificationListener extends NotificationListenerService {
         }
         service.write(NjjFrames.alert(type, watchTitle, watchText));
         return true;
+    }
+
+    /**
+     * Lembrete do próprio app (canais "hub-lembretes-…") → relógio, se "Lembretes do app no relógio" estiver ligado.
+     * Vale mesmo com o envio das outras notificações desligado. A chave leva o minuto em que foi postado: o lembrete
+     * diário reaparece com a mesma chave todo dia e precisa ir de novo, mas uma atualização no mesmo minuto não repete.
+     */
+    private void forwardReminder(StatusBarNotification sbn) {
+        Notification notification = sbn.getNotification();
+        String channel = notification != null ? notification.getChannelId() : null;
+        if (channel == null || !channel.startsWith(REMINDER_CHANNEL_PREFIX)) return;
+        if (!WatchPrefs.get(this).getBoolean(WatchPrefs.REMINDERS, true)) return;
+        WatchService service = WatchService.instance;
+        if (service == null || !service.isReady()) return;
+
+        Bundle extras = notification.extras;
+        CharSequence title = extras != null ? extras.getCharSequence(Notification.EXTRA_TITLE) : null;
+        CharSequence text = extras != null ? extras.getCharSequence(Notification.EXTRA_TEXT) : null;
+        String watchTitle = title != null && title.length() > 0 ? title.toString() : "Hub de Saúde";
+        String watchText = text != null && text.length() > 0 ? text.toString() : "Lembrete";
+        String key = sbn.getKey() + "@" + (sbn.getPostTime() / 60000L);
+        synchronized (lastSent) {
+            if (lastSent.containsKey(key)) return;
+            lastSent.put(key, watchTitle);
+        }
+        service.write(NjjFrames.alert(WatchPrefs.get(this).getInt(WatchPrefs.DEFAULT_TYPE, 0), watchTitle, watchText));
     }
 
     /** Nome do app ("WhatsApp") a partir do pacote ("com.whatsapp"). */

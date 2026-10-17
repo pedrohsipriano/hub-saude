@@ -12,6 +12,7 @@ final class NjjFrames {
 
     static final int CMD_ALERT_MSG = 0x0B; // notificação
     static final int CMD_DATE_TIME = 0x43; // hora
+    static final int CMD_DRINK_WATER = 0x57; // lembrete de água próprio do relógio (SDK: EVT_TYPE_DRINK_WATER = 87)
     static final int CMD_PHONE_TYPE = 0x67; // tipo de celular
     static final int CONTROL_WRITE = 0x02;
     static final int PHONE_ANDROID = 0x02;
@@ -39,6 +40,16 @@ final class NjjFrames {
     }
 
     /** Tipo de celular (o app oficial manda ao conectar). */
+    /**
+     * Lembrete de água próprio do relógio: [ligado][intervalo][início hh mm][fim hh mm] (SDK: setDrinkWater).
+     * Ligado, ele toca no horário do relógio, fora de sincronia com o lembrete do celular. O app o desliga e
+     * repassa o lembrete do celular ao relógio na mesma hora (HubNotificationListener). Intervalo e horário
+     * são os que o MActivePro gravou no log (05, 08:30 às 18:30); com o lembrete desligado, não fazem diferença.
+     */
+    static byte[] drinkWater(boolean enabled) {
+        return frame(CMD_DRINK_WATER, CONTROL_WRITE, new byte[] { (byte) (enabled ? 1 : 0), 0x05, 0x08, 0x1E, 0x12, 0x1E });
+    }
+
     static byte[] phoneType() {
         return frame(CMD_PHONE_TYPE, CONTROL_WRITE, new byte[] { (byte) PHONE_ANDROID });
     }

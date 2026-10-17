@@ -80,6 +80,9 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
   contentMode: 'full', // 'full' = remetente e mensagem; 'appOnly' = só o nome do app (privacidade)
   blocked: [], // pacotes que não vão para o relógio
   types: {}, // ícone escolhido na tela para cada pacote (substitui o padrão)
+  // Lembretes do app (água, refeições, pesagem) vibram no relógio na mesma hora do celular; o lembrete de água
+  // próprio do relógio fica desligado (tocava em outro horário, 3 ou 4 vezes a cada lembrete do celular).
+  reminders: true,
 }
 
 /** Ícone (tipo) de um app: o escolhido na tela, senão o padrão, senão "Outros". */
@@ -95,5 +98,6 @@ export function nativeNotificationConfig(settings) {
     blocked: settings.blocked ?? [],
     types: { ...DEFAULT_APP_TYPES, ...settings.types },
     defaultType: 0,
+    reminders: settings.reminders !== false,
   }
 }

@@ -10,7 +10,8 @@ import { createWebBluetoothWatchConnector, describeWatchError } from '../ble/web
 import { isNativeApp } from '../platform.js'
 import { SCALE_DEVICE } from '../devices/scale/weighings.js'
 import { CMD, SLEEP_PROBE_PARAMS, parseBattery, parseLiveHeartRate, parseSleep, parseSportRealtime } from '../devices/watch/njjProtocol.js'
-import { watchSyncToMeasurement } from '../devices/watch/watchMeasurements.js'
+import { sleepNightsToMeasurement, watchSyncToMeasurement } from '../devices/watch/watchMeasurements.js'
+import { compactNight, loadSleepBackup, mergeSleepNights, saveSleepBackup } from '../devices/watch/sleepBackup.js'
 import { createWatchSession } from '../devices/watch/watchSession.js'
 import { groupWeighings } from '../devices/scale/weighings.js'
 import { DEFAULT_USER_ID, hub } from '../hub/hub.js'
@@ -107,18 +108,51 @@ export function useWatch({ ownerId, owner = null } = {}) {
   const [remembered, setRemembered] = useState(null)
   // Último envio automático do perfil e da meta ao relógio ({ at, ok, changed, steps } ou { ok: false, message }).
   const [profileSync, setProfileSync] = useState(null)
+  // Cópia local das noites de sono que vieram do relógio (com as fases, para o gráfico).
+  const [sleepBackup, setSleepBackup] = useState(loadSleepBackup)
 
   // Conexão e sessão abertas no momento (refs: usadas só em callbacks).
   const connectionRef = useRef(null)
   const sessionRef = useRef(null)
   const autoWeightRef = useRef(true)
 
-  /** Eventos espontâneos do relógio. */
-  const handleEvent = useCallback((frame) => {
-    if (frame.cmd === CMD.BATTERY) setBattery(parseBattery(frame.payload))
-    if (frame.cmd === CMD.SPORT_REALTIME) setLiveSteps(parseSportRealtime(frame.payload).steps)
-    if (frame.cmd === CMD.LIVE_HR) setLiveHeartRate(parseLiveHeartRate(frame.payload))
+  /**
+   * Guarda noites de sono na cópia local, na hora (o relógio apaga a noite depois de entregá-la, e o
+   * localStorage funciona mesmo com o app em segundo plano, quando o banco fica congelado).
+   */
+  const rememberNights = useCallback((nights) => {
+    if (!nights.length) return
+    const merged = mergeSleepNights(loadSleepBackup(), nights.map(compactNight))
+    saveSleepBackup(merged)
+    setSleepBackup(merged)
   }, [])
+
+  /** Eventos espontâneos do relógio. */
+  const handleEvent = useCallback(
+    (frame) => {
+      if (frame.cmd === CMD.BATTERY) setBattery(parseBattery(frame.payload))
+      if (frame.cmd === CMD.SPORT_REALTIME) setLiveSteps(parseSportRealtime(frame.payload).steps)
+      if (frame.cmd === CMD.LIVE_HR) setLiveHeartRate(parseLiveHeartRate(frame.payload))
+      // Noites a mais: o relógio manda todas as noites guardadas de uma vez (um quadro 0x4F por noite) logo
+      // depois da resposta ao pedido. Antes, só a primeira era lida e as outras se perdiam.
+      if (frame.cmd === CMD.SLEEP) {
+        const sleep = parseSleep(frame.payload)
+        if (sleep) {
+          rememberNights([sleep])
+          hub.emit('measurement', sleepNightsToMeasurement([sleep], ownerRef.current))
+        }
+      }
+    },
+    [rememberNights],
+  )
+
+  // Ao abrir o app (e ao trocar o dono do relógio): regrava no banco as noites da cópia local. Gravar de novo
+  // não duplica, e recupera uma noite que não chegou ao banco (app fechado com o banco congelado).
+  useEffect(() => {
+    if (!ownerId) return
+    const saved = loadSleepBackup()
+    if (saved.length) hub.emit('measurement', sleepNightsToMeasurement(saved, ownerId))
+  }, [ownerId])
 
   /**
    * Fecha a sessão e solta a conexão atual. No serviço nativo, só solta a tela (o relógio continua
@@ -142,10 +176,11 @@ export function useWatch({ ownerId, owner = null } = {}) {
     const result = await session.syncAll()
     setData(result)
     if (result.battery) setBattery(result.battery)
+    if (result.sleep) rememberNights([result.sleep])
     hub.emit('measurement', watchSyncToMeasurement(result, ownerRef.current))
     setError(result.errors.length ? `Alguns dados não vieram: ${result.errors.join('; ')}` : null)
     if (sessionRef.current === session) setStatus('connected')
-  }, [])
+  }, [rememberNights])
 
   /**
    * Conecta ao relógio real (serviço nativo no Android, Web Bluetooth no PC) ou ao simulador e já sincroniza.
@@ -366,18 +401,22 @@ export function useWatch({ ownerId, owner = null } = {}) {
       const next = { at, items }
       setProbe(next)
       storeProbe(next)
-      const found = items.find((item) => item.sleep)
-      if (found) hub.emit('measurement', watchSyncToMeasurement({ syncedAt: at, sleep: found.sleep }, ownerRef.current))
+      const nights = items.filter((item) => item.sleep).map((item) => item.sleep)
+      if (nights.length) {
+        rememberNights(nights)
+        hub.emit('measurement', sleepNightsToMeasurement(nights, ownerRef.current))
+      }
     } finally {
       setProbing(false)
     }
-  }, [])
+  }, [rememberNights])
 
   return {
     status,
     error,
     deviceName,
     data,
+    sleepBackup,
     battery,
     liveSteps,
     liveHeartRate,

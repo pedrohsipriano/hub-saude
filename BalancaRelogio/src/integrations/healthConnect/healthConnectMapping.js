@@ -119,10 +119,12 @@ export function measurementToSamples(
 
     // Sono: sessão do início ao fim (fim = horário em que acordou; duração = dormindo + acordado).
     const awake = byTimestamp('sleepAwakeMinutes')
+    const starts = byTimestamp('sleepStart')
     for (const [endTime, asleepMinutes] of byTimestamp('sleepMinutes')) {
       // Sono recém-terminado ainda pode mudar (a pessoa volta a dormir): espera assentar.
       if (endTime + SLEEP_SETTLE_MS > now) continue
-      const startTime = endTime - (asleepMinutes + (awake.get(endTime) ?? 0)) * 60 * 1000
+      // Início gravado pelo relógio; sem ele (dados antigos), estimado pela duração.
+      const startTime = starts.get(endTime) ?? endTime - (asleepMinutes + (awake.get(endTime) ?? 0)) * 60 * 1000
       samples.push({
         key: `sleep|${endTime}`,
         options: { dataType: 'sleep', value: asleepMinutes, startDate: iso(startTime), endDate: iso(endTime) },

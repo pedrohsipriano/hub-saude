@@ -3,9 +3,15 @@ import { useMemo } from 'react'
 import LineChart from '../../components/LineChart/LineChart.jsx'
 import { WATCH_MODE } from '../../hooks/useWatch.js'
 import { useWeighings } from '../../hooks/useWeighings.js'
+import { useMeasurementRows } from '../../hooks/useMeasurementRows.js'
+import { averageSleep, sleepByDay, sleepNights } from '../../report/sleep.js'
+import SleepChart from '../../components/SleepChart/SleepChart.jsx'
+import SleepStagesChart from '../../components/SleepChart/SleepStagesChart.jsx'
+import { expandNight } from '../../devices/watch/sleepBackup.js'
+import { useNow } from '../../hooks/useNow.js'
 import { slotTimestamp, startOfLocalDay } from '../../devices/watch/watchMeasurements.js'
 import ui from '../../styles/controls.module.css'
-import { formatDateTime, formatMinutes, formatNumber, formatTime } from '../../utils/format.js'
+import { formatDateTime, formatDayMonth, formatMinutes, formatNumber, formatTime } from '../../utils/format.js'
 import ConnectionLogCard from './ConnectionLogCard.jsx'
 import PhoneBluetoothCard from './PhoneBluetoothCard.jsx'
 import SleepProbeCard from './SleepProbeCard.jsx'
@@ -43,6 +49,19 @@ export default function WatchPage({ watch, owner, users, onOwnerChange }) {
   // As pesagens do dono do relógio são as que vão para o perfil dele.
   const { weighings } = useWeighings(owner?.userId)
   const lastWeighing = weighings.at(-1)
+  // Sono salvo no banco (a última sincronização pode já não trazer a noite): últimas 7 noites, relógio na frente.
+  const { rows } = useMeasurementRows(owner?.userId)
+  const nights = useMemo(() => sleepNights(rows).slice(-7).reverse(), [rows])
+  const lastNight = nights[0] ?? null
+  // Gráfico: últimas 14 noites, com a meta de sono do dono do relógio.
+  const now = useNow()
+  const chartDays = useMemo(() => sleepByDay(rows, now, 14), [rows, now])
+  const sleepGoal = owner?.goals?.sleepHours ? owner.goals.sleepHours * 60 : null
+  // Fases da última noite (só as noites do relógio têm as fases, guardadas na cópia local).
+  const lastNightStages = useMemo(() => {
+    const saved = lastNight && watch.sleepBackup?.find((night) => night.endMs === lastNight.endMs)
+    return saved ? expandNight(saved) : null
+  }, [lastNight, watch.sleepBackup])
 
   const connected = status === 'connected' || status === 'syncing'
   const busy = status === 'connecting' || status === 'syncing'
@@ -180,24 +199,36 @@ export default function WatchPage({ watch, owner, users, onOwnerChange }) {
         </div>
       )}
 
-      {/* Sono */}
-      {data && (
-        <div className={ui.card}>
-          <h3 className={ui.cardTitle}>Sono</h3>
-          {data.sleep ? (
+      {/* Sono: a última noite salva e as anteriores (relógio na frente do que veio do Health Connect). */}
+      <div className={ui.card}>
+        <h3 className={ui.cardTitle}>Sono</h3>
+        {lastNight ? (
+          <>
             <p className={styles.sleep}>
-              {formatTime(data.sleep.startMs)} → {formatTime(data.sleep.endMs)} · dormiu{' '}
-              <strong>{formatMinutes(data.sleep.asleepMinutes)}</strong> (profundo {formatMinutes(data.sleep.deepMinutes)},
-              leve {formatMinutes(data.sleep.lightMinutes)}, acordado {formatMinutes(data.sleep.awakeMinutes)})
+              {formatDayMonth(lastNight.endMs)} · {lastNight.startMs ? `${formatTime(lastNight.startMs)} → ` : 'acordou às '}
+              {formatTime(lastNight.endMs)} · dormiu <strong>{formatMinutes(lastNight.asleepMinutes)}</strong>
+              {lastNight.deepMinutes != null &&
+                ` (profundo ${formatMinutes(lastNight.deepMinutes)}, leve ${formatMinutes(lastNight.lightMinutes)}, acordado ${formatMinutes(lastNight.awakeMinutes)})`}
             </p>
-          ) : (
-            <p className={ui.hint}>
-              O relógio não tem sono registrado. Durma com ele e sincronize de manhã. O formato do sono vem do SDK
-              da NJJ e será conferido na primeira noite.
-            </p>
-          )}
-        </div>
-      )}
+            {!lastNight.fromWatch && <p className={ui.hint}>Veio do Health Connect (outro app), não do relógio.</p>}
+            {lastNightStages && <SleepStagesChart night={lastNightStages} />}
+            <SleepChart days={chartDays} goalMinutes={sleepGoal} averageMinutes={averageSleep(chartDays)} />
+            {nights.length > 1 && (
+              <ul className={styles.sleepList}>
+                {nights.slice(1).map((night) => (
+                  <li key={night.endMs}>
+                    {formatDayMonth(night.endMs)}: <strong>{formatMinutes(night.asleepMinutes)}</strong>
+                    {night.deepMinutes != null && ` · profundo ${formatMinutes(night.deepMinutes)}`}
+                    {!night.fromWatch && ' · Health Connect'}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <p className={ui.hint}>Nenhuma noite salva ainda. Durma com o relógio; o sono vem na sincronização da manhã.</p>
+        )}
+      </div>
 
       {/* Notificações do celular no relógio e funcionamento com o app fechado */}
       <WatchNotificationsCard watch={watch} connected={connected} />

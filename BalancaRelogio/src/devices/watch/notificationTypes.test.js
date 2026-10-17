@@ -16,6 +16,9 @@ describe('notificações no relógio', () => {
     expect(config.types['com.x']).toBe(18)
     expect(config.types['com.whatsapp']).toBe(DEFAULT_APP_TYPES['com.whatsapp'])
     expect(nativeNotificationConfig({ contentMode: 'outro' }).contentMode).toBe('full')
+    // Lembretes do app no relógio: ligados, a não ser que a pessoa desligue.
+    expect(nativeNotificationConfig({}).reminders).toBe(true)
+    expect(nativeNotificationConfig({ reminders: false }).reminders).toBe(false)
   })
 
   it('tipos de 0 a 31, sem buracos', () => {

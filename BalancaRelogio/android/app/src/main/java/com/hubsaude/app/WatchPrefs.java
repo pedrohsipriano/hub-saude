@@ -2,6 +2,7 @@ package com.hubsaude.app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.core.app.NotificationManagerCompat;
 import java.util.HashSet;
 import java.util.Set;
 import org.json.JSONException;
@@ -23,9 +24,20 @@ final class WatchPrefs {
     static final String BLOCKED = "blockedPackages";
     static final String TYPES = "types"; // JSON { pacote: tipo do ícone no relógio }
     static final String DEFAULT_TYPE = "defaultType";
+    // Lembretes do app (água, refeições, pesagem) também no relógio, na mesma hora; desliga o lembrete de água do relógio.
+    static final String REMINDERS = "forwardReminders";
     static final String SEEN = "seenApps"; // JSON { pacote: { name, count, last } }
 
     private WatchPrefs() {}
+
+    /**
+     * Os lembretes do app vão para o relógio? Precisa da opção ligada e do "Acesso a notificações" (é o leitor de
+     * notificações que os repassa). Sem o acesso, o lembrete de água próprio do relógio continua ligado.
+     */
+    static boolean remindersOnWatch(Context context) {
+        return get(context).getBoolean(REMINDERS, true)
+            && NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.getPackageName());
+    }
 
     static SharedPreferences get(Context context) {
         return context.getSharedPreferences(FILE, Context.MODE_PRIVATE);

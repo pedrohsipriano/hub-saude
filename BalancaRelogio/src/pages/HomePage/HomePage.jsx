@@ -12,6 +12,7 @@ import { useMeasurementRows } from '../../hooks/useMeasurementRows.js'
 import { useNow } from '../../hooks/useNow.js'
 import { useWater } from '../../hooks/useWater.js'
 import { healthAlerts, weeklySummary } from '../../report/insights.js'
+import { latestSleep } from '../../report/sleep.js'
 import { weightTrendSummary } from '../../report/trend.js'
 import ui from '../../styles/controls.module.css'
 import { formatDate, formatMinutes, formatNumber, formatTime } from '../../utils/format.js'
@@ -52,9 +53,8 @@ export default function HomePage({ user, scale, watch, isWatchOwner, onNavigate 
   // Atividade de hoje: passos (ao vivo se o relógio estiver conectado), sono da noite e FC de repouso.
   const dayStart = startOfLocalDay(now)
   const steps = (isWatchOwner ? watch.liveSteps : null) ?? todayValue(rows, 'steps', dayStart)
-  const lastSleep = rows
-    .filter((row) => row.metric === 'sleepMinutes' && now - row.timestamp <= 18 * HOUR_MS)
-    .sort((a, b) => b.timestamp - a.timestamp)[0]
+  // Sono da noite: o do relógio vence o importado do Health Connect (ex.: registro manual no Samsung Health).
+  const lastSleep = latestSleep(rows, now)
   const recentHr = rows.filter((row) => row.metric === 'heartRate' && row.value > 0 && now - row.timestamp <= 24 * HOUR_MS)
   const restingHr = recentHr.length ? Math.min(...recentHr.map((row) => row.value)) : null
   // Minutos de treino gravados hoje (aba Treino).
@@ -129,9 +129,9 @@ export default function HomePage({ user, scale, watch, isWatchOwner, onNavigate 
           </div>
           <div className={styles.stat}>
             <span className={styles.statLabel}>Sono</span>
-            <span className={styles.statValue}>{lastSleep ? formatMinutes(lastSleep.value) : '--'}</span>
+            <span className={styles.statValue}>{lastSleep ? formatMinutes(lastSleep.asleepMinutes) : '--'}</span>
             {goals.sleepHours && lastSleep && (
-              <ProgressBar value={lastSleep.value} max={goals.sleepHours * 60} label="Sono em relação à meta" />
+              <ProgressBar value={lastSleep.asleepMinutes} max={goals.sleepHours * 60} label="Sono em relação à meta" />
             )}
           </div>
           <div className={styles.stat}>

@@ -222,6 +222,9 @@ O fluxo de uma pesagem é: adapter BLE → sessão → hub → banco → telas.
       - O Histórico marca essas pesagens e permite **apagar** uma pesagem (`deleteMeasurementsAt`).
     - `report/insights.js`: frases do resumo semanal e avisos informativos.
     - `report/bodyMeasurements.js`: medidas com origem `manual` e RCQ.
+    - `report/sleep.js`: uma noite por dia (o dia em que acordou), juntando as linhas de sono. Na mesma noite, o relógio vence o que veio do Health Connect (ex.: registro manual no Samsung Health). Usado pela tela Início (`latestSleep`) e por Aparelhos → Relógio (`sleepNights`, `sleepByDay`, `averageSleep`).
+    - `components/SleepChart`: gráfico das últimas 14 noites no cartão Sono (Aparelhos → Relógio), com barras empilhadas (profundo, leve e acordado; as noites do Health Connect, sem fases, numa cor só), as horas no eixo, a linha da meta de sono e a média das noites.
+    - `components/SleepChart/SleepStagesChart`: as fases da última noite ao longo do tempo (hipnograma), em três faixas: acordado, leve e profundo, com as horas. As fases vêm da cópia local das noites do relógio.
     - `devices/scale/assignUser.js`: decide de quem é a pesagem.
     - `diet/dietPlan.js`: formato, validação, agenda do dia, próxima refeição e lembretes.
     - `reminders/reminders.js`: lembretes no formato do plugin.
@@ -280,6 +283,9 @@ O fluxo de uma pesagem é: adapter BLE → sessão → hub → banco → telas.
     - **`HubNotificationListener`** é o `NotificationListenerService`, liberado pelo usuário em "Acesso a notificações". Ele repassa cada notificação ao relógio direto no nativo, com o app fechado.
       - Ignora resumos de grupo, notificações fixas (exceto chamadas), as do próprio app e repetições da mesma mensagem.
       - Chamada tocando vai como tipo 1 ("Chamada").
+      - **Lembretes do app no relógio** (opção ligada por padrão no cartão de notificações): os lembretes do próprio app (canais `hub-lembretes-…`: água, refeições, pesagem) vão ao relógio no mesmo instante em que aparecem no celular, mesmo com o envio das outras notificações desligado. Cada aviso vai uma vez (chave + minuto em que foi postado).
+        - Com a opção ligada e o "Acesso a notificações" liberado (`WatchPrefs.remindersOnWatch`), o `WatchService` desliga o **lembrete de água próprio do relógio** (`0x57` com ligado = 0) a cada conexão e ao salvar as preferências. Esse lembrete tinha horário e intervalo próprios, gravados pelo MActivePro, e tocava 3 ou 4 vezes a cada lembrete do celular.
+        - Desligar a opção não religa o lembrete do relógio; ele volta pelo MActivePro.
       - O texto não é gravado em lugar nenhum; só a contagem de notificações por app.
     - **`NjjFrames`:** quadros `BC` em Java (notificação `0x0B`, hora `0x43`, tipo de celular `0x67`), iguais aos de `njjProtocol.js`.
     - **`WatchPrefs`** (SharedPreferences): relógio lembrado, "manter conectado", notificações ligadas, texto ou só o nome do app, apps bloqueados, ícone de cada app e a lista de apps que já notificaram.
@@ -323,7 +329,7 @@ O fluxo de uma pesagem é: adapter BLE → sessão → hub → banco → telas.
 | Aba | O que tem |
 |---|---|
 | Início | o resumo do dia (detalhes abaixo) |
-| Aparelhos | Balança e Relógio |
+| Aparelhos | Relógio (aba inicial) e Balança |
 | Dieta | Hoje, Água, Histórico, Plano, Compras, Orientações |
 | Treino | Gravar, Atividades |
 | Progresso | Tendência, Histórico, Medidas, Relatório |
@@ -541,7 +547,8 @@ O MActivePro talvez já envie os dados do relógio para lá. Se enviar, gravar o
 - **Só valores finais:** o plugin não corrige nem apaga um registro já gravado.
   - Passos: só horas terminadas.
   - FC, SpO2 e pressão: só meias horas terminadas.
-  - Sono: só 30 min depois de acordar.
+  - Sono: só 30 min depois de acordar. A sessão vai do horário em que pegou no sono (`sleepStart`, gravado pelo relógio) até o de acordar; sem ele (dados antigos), o início é estimado pela duração. O plugin grava a sessão **sem as fases** (profundo/leve/acordado).
+  - **Samsung Health:** ele só mostra o sono de outros apps se tiver a permissão de **ler Sono** no Health Connect (Health Connect → Permissões de apps → Samsung Health). Um sono digitado à mão no Samsung Health volta ao Hub pela importação, mas o do relógio tem prioridade na mesma noite.
   - Apagar uma pesagem ou um treino no app **não** apaga no Health Connect.
 - **Envio de recuperação** (`catchUpEvents` + `exportPending`): ao abrir o app e no botão "Enviar pendentes", o app manda o que ficou para trás nos últimos 30 dias, como pesagens feitas no PC, o período sem permissão e valores que só agora são finais.
 - **Confirmação** (Integrações → "Confirmação da sincronização", `buildSyncReport`):
@@ -812,7 +819,9 @@ O log HCI já mostra o ATT sem a criptografia do link BLE.
 | `6F` | ANDROID_PHONE_CTRL (111) | atender/recusar chamada | app → relógio `BC 6F 02 01 <0 recusa / 1 atende>`; relógio → app pede para encerrar | SDK; não usado ainda |
 | `65` | — | música | `02` = volume (9 de 15), `03` = artista, `04` = título | ✓ |
 | `64` | — | câmera remota | config `02` abre / `00` fecha; evento `02` pronto / `01` disparo | ✓ 18:27–18:28 |
-| `57`, `7B` | — | lembretes (água/sedentarismo) | `[ativo][?][início hh mm][fim hh mm]`; `[ativo][dias 0x7F]…` | ✓ |
+| `57` | DRINK_WATER (87) | **lembrete de água próprio do relógio** (config) | `[ligado][intervalo][início hh mm][fim hh mm]` (SDK `setDrinkWater`; nos ajustes do `4E`, bytes 96–101) | ✓ `BC 57 02 06 01 05 08 1E 12 1E 5C` = ligado, intervalo 05, 08:30–18:30. O app o desliga (ver "Lembretes do app no relógio") |
+| `56` | LONG_SIT (86) | lembrete de sedentarismo (config) | como o `57`: `[ligado][intervalo][início hh mm][fim hh mm]` | ✓ 17/10 10:03: `BC 56 02 06 01 3C 08 1E 12 1E 93` = ligado, intervalo `3C` (60 min), 08:30–18:30 |
+| `7B` | — | lembrete de remédio (provável; o 3º lembrete do MActivePro) (config) | `[ativo][dias 0x7F]…` | ✓ ligado e desligado às 18:28 e às 10:03 de 17/10 |
 | `66` | — | ajustes e metas (132 bytes) | contém a meta de passos | ✓ |
 | `C8`, `C9` | OTA (200, 201) | envio de arquivo (mostrador) | `C9`: blocos `[nº do bloco u16 LE][dados]` | ✓ mostrador enviado às 18:47 (arquivo "BCSDIAL…") |
 | `72` | — | progresso da instalação (evento) | contagem 30 → 0 | ✓ depois do envio do mostrador |
@@ -823,6 +832,17 @@ O log HCI já mostra o ATT sem a criptografia do link BLE.
 **O que ainda falta:**
 - **Passos e sono:** conferir no nosso app. Os passos (`4A`, `51`) se comparam com a tela do relógio, e o sono (`4F`) se confere depois de uma noite.
   - A sincronização pede o sono com `00` e, sem dados, com `03`.
+  - **✅ Confirmado no log HCI de 17/10/2026** (`bugreport3.zip`): o formato do SDK está certo. O detalhe é que **o relógio entrega todas as noites guardadas de uma vez e depois as apaga**.
+    - Às 09:08:52, o primeiro `BC 4F 01 01 00 00` do dia trouxe **7 quadros `4F` seguidos**, um por noite, da mais nova à mais antiga (17/10 até 24/09). Eram as noites acumuladas desde a última sincronização do MActivePro, em 08/10.
+    - A partir daí, todo `4F` (de qualquer app, inclusive do MActivePro às 10:02) voltou "sem dados" (`BC 4F 03 01 00 00`).
+    - O `parseSleep` leu os 7 quadros certo: a noite de 17/10 deu 22:14 → 08:00 e **6h38**, igual à tela do relógio, e a de 08/10 deu 8h39, igual ao MActivePro.
+    - **O que dava errado no app:** só o 1º quadro era tratado como resposta, e os outros 6 se perdiam como "eventos". Além disso, com o app em segundo plano o Android congela o banco (IndexedDB), e a noite podia nem chegar a ser gravada.
+    - **Agora** (`devices/watch/sleepBackup.js` + `useWatch`):
+      - todo quadro `4F` com uma noite, seja a resposta ou um evento, é lido e gravado;
+      - cada noite vai **na hora** para uma cópia no `localStorage` (`hubSaude.watch.sleepNights`, últimas 60 noites, com as fases), que funciona mesmo com o app em segundo plano;
+      - ao abrir o app, as noites da cópia são regravadas no banco, sem duplicar.
+    - As 7 noites desse log foram recuperadas a partir dele.
+  - **Lembretes do relógio no MActivePro:** os três primeiros são água (`57`), sedentarismo (`56`) e remédio (`7B`, provável).
   - **Teste do sono e dos treinos** (página Relógio, `diagnoseSleep`): pede o `4F` com 00 a 06 e o `50`, guarda as respostas cruas e tem "Copiar resultado". Se alguma resposta trouxer uma noite, o sono é gravado.
   - Respostas grandes que chegam em várias notificações Bluetooth são juntadas antes da leitura (`isIncompleteFrame`/`concatBytes` em `watchSession`).
 - **Peso para o relógio:** ✅ capturado. É o comando `41` (2º log, `btsnoop_hci_2.log`). O peso vai em **kg inteiro**, e o comando leva o perfil completo, então os outros campos precisam ser reenviados do jeito que estão.

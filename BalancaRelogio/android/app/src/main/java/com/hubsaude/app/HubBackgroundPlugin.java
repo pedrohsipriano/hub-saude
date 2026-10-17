@@ -260,7 +260,12 @@ public class HubBackgroundPlugin extends Plugin {
         editor.putStringSet(WatchPrefs.BLOCKED, blocked);
         JSObject types = call.getObject("types", new JSObject());
         editor.putString(WatchPrefs.TYPES, types.toString());
+        boolean reminders = call.getBoolean("reminders", true);
+        editor.putBoolean(WatchPrefs.REMINDERS, reminders);
         editor.apply();
+        // Lembretes do app no relógio: desliga já o lembrete de água próprio dele (também a cada conexão).
+        WatchService service = WatchService.instance;
+        if (WatchPrefs.remindersOnWatch(getContext()) && service != null && service.isReady()) service.write(NjjFrames.drinkWater(false));
         call.resolve();
     }
 

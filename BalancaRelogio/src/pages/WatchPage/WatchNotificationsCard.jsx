@@ -70,6 +70,15 @@ export default function WatchNotificationsCard({ watch, connected }) {
           <input type="checkbox" checked={settings.enabled} onChange={(event) => notifications.update({ enabled: event.target.checked })} />
           Mostrar as notificações do celular no relógio (WhatsApp, chamadas, SMS…)
         </label>
+        <label className={styles.checkbox}>
+          <input
+            type="checkbox"
+            checked={settings.reminders !== false}
+            onChange={(event) => notifications.update({ reminders: event.target.checked })}
+          />
+          Lembretes do app no relógio (água, refeições, pesagem), na mesma hora do celular. O lembrete de água próprio do
+          relógio fica desligado, para não tocar em outro horário.
+        </label>
 
         {/* Acesso às notificações (o usuário libera uma vez nas configurações do Android). */}
         <p className={access ? styles.ok : styles.warn}>
