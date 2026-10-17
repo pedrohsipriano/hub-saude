@@ -18,6 +18,7 @@ import {
   resumeRecording,
   workoutToMeasurement,
 } from '../workouts/recording.js'
+import { useWorkoutNotification } from './useWorkoutNotification.js'
 
 // Treino em andamento guardado no aparelho (localStorage).
 const STORAGE_KEY = 'hubSaude.workoutInProgress'
@@ -62,6 +63,22 @@ export function useWorkoutRecorder() {
   const [lastFix, setLastFix] = useState(null) // último ponto bruto do GPS (mostra a precisão)
   const [gpsError, setGpsError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [weightKg, setWeightKg] = useState(null) // último peso do dono do treino (calorias ao vivo)
+
+  // Peso mais recente do dono do treino, lido uma vez por treino (sem pesagem: null = 70 kg estimados).
+  const ownerId = recording?.userId ?? null
+  useEffect(() => {
+    if (!ownerId) return undefined
+    let cancelled = false
+    listAllMeasurements()
+      .then((rows) => {
+        if (!cancelled) setWeightKg(latestWeightByUser(rows).get(ownerId) ?? null)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [ownerId])
 
   // GPS ligado durante todo o treino com trajeto (também na pausa: mantém o sinal e o serviço ativos;
   // os pontos da pausa são ignorados por addPoint).
@@ -117,6 +134,9 @@ export function useWorkoutRecorder() {
     return { type, track, distanceM: trackDistance(track), speedNow: recentSpeed(track) }
   }, [recording])
 
+  // Notificação do treino na barra e na tela bloqueada (só no app Android).
+  useWorkoutNotification(recording, live, weightKg)
+
   /**
    * Começa um treino do tipo escolhido para o usuário.
    * @param {string} typeId
@@ -160,5 +180,5 @@ export function useWorkoutRecorder() {
     }
   }, [recording])
 
-  return { recording, live, lastFix, gpsError, saving, start, pause, resume, finish, discard }
+  return { recording, live, weightKg, lastFix, gpsError, saving, start, pause, resume, finish, discard }
 }

@@ -88,6 +88,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Android 16+: notificação do treino como "atualização ao vivo" (chip na barra de status, tela
+         bloqueada e Now Bar da Samsung na One UI 8+). -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- Now Bar da Samsung: liga o ajuste de teste só durante o treino (NowBarSwitch). Só o adb concede:
+         adb shell pm grant com.hubsaude.app android.permission.WRITE_SECURE_SETTINGS -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- As permissões do Health Connect (peso, gordura, TMB, passos, FC, SpO2, pressão, sono)
          vêm do manifesto do plugin @capgo/capacitor-health. -->

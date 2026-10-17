@@ -1,24 +1,35 @@
 package com.hubsaude.app;
 
+import android.app.KeyguardManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.PowerManager;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.provider.Settings;
+import android.view.WindowManager;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +41,9 @@ import org.json.JSONObject;
  * - Notificações do celular no relógio: configureNotifications, notificationApps, notificationAccess,
  *   openNotificationAccessSettings e o evento "notificationPosted".
  * - Bateria: batteryStatus / requestIgnoreBatteryOptimizations.
+ * - Impressão: printPage ("Gerar PDF" do relatório).
+ * - Treino: workoutNotification / workoutNotificationClear (notificação na tela bloqueada e na Now Bar) e
+ *   setShowOverLock / lockStatus / unlock + o evento "lockState" (painel do treino por cima da tela bloqueada).
  */
 @CapacitorPlugin(name = "HubBackground")
 @android.annotation.SuppressLint("MissingPermission") // o app só chama estes métodos depois de pedir o Bluetooth
@@ -38,14 +52,42 @@ public class HubBackgroundPlugin extends Plugin {
     /** Plugin ativo (null com o app fechado: os eventos param de ser entregues, o serviço continua). */
     static volatile HubBackgroundPlugin instance;
 
+    /** Avisos de tela ligada/desligada/desbloqueada (treino por cima da tela bloqueada). */
+    private BroadcastReceiver screenReceiver;
+
     @Override
     public void load() {
         instance = this;
+        screenReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // Tela apagando: avisa "bloqueado" já, para o app trocar para o painel do treino antes de a
+                // tela voltar (sem mostrar outra aba por um instante). Ao ligar e ao desbloquear, vale o estado real.
+                boolean locked = Intent.ACTION_SCREEN_OFF.equals(intent.getAction()) || (!Intent.ACTION_USER_PRESENT.equals(intent.getAction()) && isKeyguardLocked());
+                emitLockState(locked);
+            }
+        };
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        // Avisos protegidos do sistema (só o Android envia), então "exportado" não abre brecha.
+        ContextCompat.registerReceiver(getContext(), screenReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
+    }
+
+    @Override
+    protected void handleOnResume() {
+        // Voltou à frente (inclusive por cima da tela bloqueada): confirma o estado.
+        emitLockState(isKeyguardLocked());
     }
 
     @Override
     protected void handleOnDestroy() {
         if (instance == this) instance = null;
+        try {
+            if (screenReceiver != null) getContext().unregisterReceiver(screenReceiver);
+        } catch (IllegalArgumentException ignored) {
+            // Já removido.
+        }
     }
 
     /** Evento com um campo de texto para o app (se estiver aberto). */
@@ -289,5 +331,129 @@ public class HubBackgroundPlugin extends Plugin {
             getContext().startActivity(fallback);
         }
         call.resolve();
+    }
+
+    // ---------------------------------------------------------------- impressão (PDF)
+
+    /**
+     * "Gerar PDF": o WebView do Android não implementa window.print(), então a página vai para o
+     * PrintManager do sistema, onde o destino "Salvar como PDF" gera o arquivo (vale o CSS de @media print).
+     */
+    @PluginMethod
+    public void printPage(PluginCall call) {
+        String name = call.getString("name", "Relatorio");
+        getActivity().runOnUiThread(() -> {
+            try {
+                PrintManager printManager = (PrintManager) getActivity().getSystemService(Context.PRINT_SERVICE);
+                PrintDocumentAdapter adapter = getBridge().getWebView().createPrintDocumentAdapter(name);
+                PrintAttributes attributes = new PrintAttributes.Builder()
+                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                    .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
+                    .build();
+                printManager.print(name, adapter, attributes);
+                call.resolve();
+            } catch (Exception error) {
+                call.reject(error.getMessage());
+            }
+        });
+    }
+
+    // ---------------------------------------------------------------- treino em andamento
+
+    /** Mostra ou atualiza a notificação do treino (ver WorkoutNotification). */
+    @PluginMethod
+    public void workoutNotification(PluginCall call) {
+        List<String> lines = new ArrayList<>();
+        JSArray array = call.getArray("lines", new JSArray());
+        for (int i = 0; i < array.length(); i++) lines.add(array.optString(i));
+        WorkoutNotification.show(
+            getContext(),
+            call.getString("title", "Treino"),
+            call.getString("text", ""),
+            lines,
+            call.getString("shortText"),
+            call.getData().optLong("elapsedMs", 0L),
+            call.getBoolean("paused", false)
+        );
+        call.resolve();
+    }
+
+    /** Apaga a notificação do treino. */
+    @PluginMethod
+    public void workoutNotificationClear(PluginCall call) {
+        WorkoutNotification.clear(getContext());
+        call.resolve();
+    }
+
+    /** Now Bar da Samsung: aparelho compatível, permissão concedida pelo adb e ajuste ligado agora. */
+    @PluginMethod
+    public void nowBarStatus(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("supported", NowBarSwitch.isSupported());
+        result.put("permission", NowBarSwitch.hasPermission(getContext()));
+        result.put("enabled", NowBarSwitch.isEnabled(getContext()));
+        call.resolve(result);
+    }
+
+    // ---------------------------------------------------------------- treino por cima da tela bloqueada
+
+    /**
+     * Liga ou desliga o app por cima da tela bloqueada, como a navegação do Google Maps: com o app aberto ao
+     * bloquear, a tela volta direto no painel do treino, sem desbloquear. Não é notificação, então vale
+     * mesmo com as notificações escondidas na tela bloqueada. O app só liga durante um treino.
+     */
+    @PluginMethod
+    public void setShowOverLock(PluginCall call) {
+        boolean enabled = call.getBoolean("enabled", false);
+        getActivity().runOnUiThread(() -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                getActivity().setShowWhenLocked(enabled);
+            } else if (enabled) {
+                getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            } else {
+                getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            }
+            call.resolve();
+        });
+    }
+
+    /** A tela está bloqueada agora (mesmo com o app por cima dela)? */
+    @PluginMethod
+    public void lockStatus(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("locked", isKeyguardLocked());
+        call.resolve(result);
+    }
+
+    /** Pede o desbloqueio (senha, digital ou rosto); depois dele o app volta ao normal. */
+    @PluginMethod
+    public void unlock(PluginCall call) {
+        KeyguardManager keyguard = (KeyguardManager) getContext().getSystemService(Context.KEYGUARD_SERVICE);
+        if (keyguard == null) {
+            call.resolve();
+            return;
+        }
+        getActivity().runOnUiThread(() -> {
+            keyguard.requestDismissKeyguard(getActivity(), new KeyguardManager.KeyguardDismissCallback() {
+                @Override
+                public void onDismissSucceeded() {
+                    emitLockState(false);
+                }
+            });
+            call.resolve();
+        });
+    }
+
+    /** Tela bloqueada (ou mostrando o app por cima do bloqueio)? */
+    private boolean isKeyguardLocked() {
+        KeyguardManager keyguard = (KeyguardManager) getContext().getSystemService(Context.KEYGUARD_SERVICE);
+        return keyguard != null && keyguard.isKeyguardLocked();
+    }
+
+    /** Evento "lockState" para o app: { locked }. */
+    private void emitLockState(boolean locked) {
+        JSObject data = new JSObject();
+        data.put("locked", locked);
+        notifyListeners("lockState", data);
     }
 }

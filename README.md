@@ -27,8 +27,9 @@ Ordem de implementação: balança primeiro (mais simples), depois o relógio.
 
 ## Baixar e usar (APK para Android)
 
-1. No celular Android, baixe o **[hub-saude-1.1.0.apk](https://github.com/pedrohsipriano/hub-saude/raw/main/releases/hub-saude-1.1.0.apk)** (pasta [`releases/`](releases/), ~8 MB).
-   - SHA-256 da 1.1.0: `c7c237534c61dd6dc1f8ebb728d3a1fd458f8a744acf3fc0332b71f9a0d6409a`.
+1. No celular Android, baixe o **[hub-saude-1.4.0.apk](https://github.com/pedrohsipriano/hub-saude/raw/main/releases/hub-saude-1.4.0.apk)** (pasta [`releases/`](releases/), ~8 MB).
+   - SHA-256 da 1.4.0: `59f45a70fdc7179da76a3e54512d985fc238a1092b1eb7793b21774a7abff7f0`.
+   - Samsung (Now Bar do treino): depois de instalar, rode uma vez no PC com o celular no cabo `adb shell pm grant com.hubsaude.app android.permission.WRITE_SECURE_SETTINGS` (ver "Treinos").
 2. Abra o arquivo baixado. O Android pede para **permitir a instalação de apps desta fonte** (o navegador ou o gerenciador de arquivos): permita e toque em **Instalar**.
    - Se o Play Protect avisar "app desconhecido", toque em "Mais detalhes → Instalar assim mesmo". O APK não vem da Play Store, por isso o aviso.
 3. Primeiro uso:
@@ -244,7 +245,8 @@ O fluxo de uma pesagem é: adapter BLE → sessão → hub → banco → telas.
     - `replay.js`: percurso animado (distância acumulada, trecho percorrido até uma fração, suavização e redução de pontos). É usado pelo mapa e pelo vídeo.
     - `share/` (fora de `workouts/`, porque usa o navegador): `shareCard.js` desenha o cartão 9:16 num canvas (imagem PNG e vídeo pelo `MediaRecorder`), e `shareFile.js` compartilha (Android: Filesystem + Share; navegador: Web Share com arquivos ou download).
     - `locationSource.js`: o único arquivo que lê o GPS (plugin nativo no Android, `navigator.geolocation` no navegador).
-    - Hooks: `useWorkoutRecorder` (no `App`, para continuar gravando ao trocar de aba), `useWorkouts` (lista), `useClock` (cronômetro de 1 s só na tela de gravação) e `useRouteReplay` (animação do percurso, ~25 quadros/s).
+    - `liveNotification.js`: título, texto e linhas da notificação do treino em andamento.
+    - Hooks: `useWorkoutRecorder` (no `App`, para continuar gravando ao trocar de aba), `useWorkoutNotification` (notificação do treino no Android, chamado pelo `useWorkoutRecorder`), `useWorkouts` (lista), `useClock` (cronômetro de 1 s só na tela de gravação) e `useRouteReplay` (animação do percurso, ~25 quadros/s).
     - Banco: tabela `workouts` (`saveWorkout`, `listWorkouts`, `deleteWorkout`), criada pelo autorreparo.
 16. **Dieta seguida, água e alarmes:** módulos puros, todos com testes.
     - `diet/adherence.js`: situação de cada refeição (feita = 1, "não fiz corretamente" = −1), adesão por dia e a lista das fora do plano.
@@ -286,7 +288,10 @@ O fluxo de uma pesagem é: adapter BLE → sessão → hub → banco → telas.
       - Bluetooth do celular: `bondedDevices` (pareados, com tipo LE/clássico/duplo e se estão ligados), `pairWatch` (janela de pareamento do Android) e `openBluetoothSettings`.
       - Notificações: `configureNotifications`, `notificationApps`, `notificationAccess`/`openNotificationAccessSettings` e o evento `notificationPosted`.
       - Bateria: `batteryStatus`/`requestIgnoreBatteryOptimizations`.
-    - **Manifesto:** `FOREGROUND_SERVICE_CONNECTED_DEVICE`, `RECEIVE_BOOT_COMPLETED` e `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
+      - Impressão: `printPage` ("Gerar PDF" do relatório).
+      - Treino: `workoutNotification`/`workoutNotificationClear` (notificação na tela bloqueada, montada por `WorkoutNotification`) e `setShowOverLock`/`lockStatus`/`unlock` com o evento `lockState` (painel por cima da tela bloqueada; o plugin escuta `SCREEN_OFF`, `SCREEN_ON` e `USER_PRESENT`).
+      - No JS, o plugin é registrado num lugar só: `src/native/hubBackground.js`.
+    - **Manifesto:** `FOREGROUND_SERVICE_CONNECTED_DEVICE`, `RECEIVE_BOOT_COMPLETED`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` e `POST_PROMOTED_NOTIFICATIONS` (atualização ao vivo do treino).
     - **Escolha do relógio** (`watchServiceConnector`): primeiro o relógio pareado no Bluetooth do celular (nome com "watch", que não seja só clássico, de preferência o já ligado). Se não houver, vem a busca do Android, e depois o app pede o pareamento ao celular. O cartão "Bluetooth do celular" (`PhoneBluetoothCard`) mostra se o relógio está pareado e ligado, lista os pareados ("Usar este") e tem "Parear pelo Bluetooth do celular" e "Abrir Bluetooth do celular".
     - **JS:** `useWatch` reconecta ao serviço quando o app abre e mostra "Procurando o relógio…" / "Bluetooth desligado"; também tem "Trocar de relógio" e "Esquecer relógio".
       - Para não perder o aviso de "conectado" que chega antes de o app começar a escutar, o conector confere o estado real (`watchStatus`) a cada 2 s na conexão, e o `useWatch` confere a cada 5 s enquanto espera. `useWatchNotifications` e `WatchNotificationsCard` cuidam das preferências, da lista de apps com o ícone de cada um, do teste, do "Testar ícones (0 a 31)" e da bateria. As regras puras ficam em `devices/watch/notificationTypes.js`.
@@ -301,7 +306,9 @@ O fluxo de uma pesagem é: adapter BLE → sessão → hub → banco → telas.
   - uma tabela com as últimas 4 pesagens;
   - um gráfico de evolução.
 - A página de segmentos (braços, pernas, tronco) ficou de fora porque exige balança de 8 eletrodos.
-- O botão "Gerar PDF" chama `window.print()`. O CSS de `@media print` esconde o menu e formata a página em A4, e o título da página vira o nome do arquivo: `NOMERelatorioProgressoDDMMAAAA`.
+- O botão "Gerar PDF" abre a impressão do sistema (`native/printPage.js`), onde o destino "Salvar como PDF" gera o arquivo. O CSS de `@media print` esconde o menu e formata a página em A4. O nome do arquivo segue o padrão `NOMERelatorioProgressoDDMMAAAA`.
+  - **Navegador:** `window.print()`, com o título da página trocado pelo nome do arquivo durante a impressão.
+  - **App Android:** o WebView do Android não implementa `window.print()` (o botão não fazia nada). A página vai para o `PrintManager` do Android (`HubBackground.printPage`, com `WebView.createPrintDocumentAdapter`), em A4 e já com o nome do arquivo.
 - No shell desktop, o mesmo HTML pode virar PDF direto, sem a janela de impressão (ex.: `webContents.printToPDF` no Electron).
 - As faixas reproduzem os rótulos do print do OKOK, e isso é verificado em `report/standards.test.js`.
 - No fim do relatório, a seção **"Cruzamentos: relógio, treinos e dieta"** mostra, para as últimas 7 pesagens, os passos do dia anterior, o sono da noite anterior, a FC de repouso, os **minutos de treino da véspera** e a **dieta da véspera** (% das refeições feitas e quantas ficaram fora do plano).
@@ -413,7 +420,27 @@ A tela inicial mostra:
 - **Finalizar:** pausa o cronômetro e o GPS enquanto pergunta "Salvar / Continuar / Descartar". "Continuar" volta a gravar se estava gravando.
 - **Gravando:** cronômetro do tempo em movimento (a pausa não conta), distância, ritmo atual (últimos 30 s) e médio, estado do GPS e mapa seguindo a posição. Cada pausa fecha um trecho, e o trajeto não liga os trechos.
 - **GPS:**
-  - **Android:** continua com a tela apagada, como serviço com notificação ("Gravando o treino").
+  - **Android:** continua com a tela apagada, como serviço em primeiro plano.
+  - **Notificação do treino** (`WorkoutNotification.java` + `hooks/useWorkoutNotification.js`; conteúdo em `workouts/liveNotification.js`):
+    - aparece na barra e **na tela bloqueada** (visibilidade pública, canal `hub-treino` de importância padrão, sem som nem vibração);
+    - mostra o exercício, o estado (gravando ou "pausado em 12:34"), o **cronômetro**, contado pelo próprio Android, e os números: distância, ritmo médio e atual (ou velocidade) e calorias. Expandida, mostra uma informação por linha;
+    - os números são atualizados a cada ponto do GPS (no máximo a cada 5 s), ao pausar ou retomar e, nos treinos sem GPS, a cada 15 s;
+    - usa o mesmo id da notificação do serviço do plugin de GPS (28351), então substitui a notificação fixa dele em vez de criar uma segunda, e some ao finalizar;
+    - **Android 16+:** pede para virar "atualização ao vivo" (`setRequestPromotedOngoing`, permissão `POST_PROMOTED_NOTIFICATIONS`): chip na barra de status com a distância e destaque na tela bloqueada. No S24 Ultra (Android 16, One UI 8.5) o Android aceita (`PROMOTED_ONGOING` no `dumpsys notification`).
+    - **Now Bar da Samsung** (`NowBarSwitch.java`): na One UI 8.5, a Now Bar só mostra as atualizações ao vivo de apps de fora com o ajuste de teste `Settings.Secure enable_notification_nowbar_test = 1`.
+      - Esse ajuste é o botão "Notif. ao vivo para todos apps" (Opções do desenvolvedor → Apps), que a Samsung esconde no build do S24 Ultra. Achado lendo o app de Configurações (`NotificationNowBarPreferenceController`). A SystemUI o lê a cada notificação (`NotificationEntry.setSbn`, `SettingsHelper.isDevelopRonTestAllowed`).
+      - Enquanto ligado, vale para todos os apps.
+      - **O app liga o ajuste só durante o treino** e desliga ao terminar e ao abrir sem treino. O Android não avisa o app de que ele vai ser desinstalado, então é assim que o ajuste não fica ligado depois de desinstalar (a não ser que o app seja removido no meio de um treino).
+      - **Permissão:** gravar em `Settings.Secure` exige `WRITE_SECURE_SETTINGS`, declarada no manifesto, que só o adb concede e que se perde ao desinstalar. Depois de cada instalação nova, rode uma vez, com o celular no cabo: `adb shell pm grant com.hubsaude.app android.permission.WRITE_SECURE_SETTINGS`. Sem ela, a tela Treino → Gravar mostra esse comando (`useNowBarStatus`, método nativo `nowBarStatus`), e a notificação continua na barra, só fora da Now Bar.
+      - **Para desligar à mão:** `adb shell settings put secure enable_notification_nowbar_test 0`.
+    - **Now Brief:** não tem API para apps de fora.
+- **Painel do treino por cima da tela bloqueada** (`hooks/useLockScreen.js` + `components/LockScreenWorkout`; nativo: `setShowOverLock`, `lockStatus`, `unlock` e o evento `lockState`):
+  - Durante um treino, o app pode aparecer por cima da tela bloqueada (`setShowWhenLocked`), como a navegação do Google Maps. **Não é notificação**, então aparece mesmo com as notificações escondidas na tela bloqueada.
+  - Bloqueie o celular com o app aberto (em qualquer aba): ao ligar a tela, aparece o painel com o cronômetro, a distância, o ritmo ou a velocidade, as calorias e **Pausar/Retomar**.
+  - Bloqueado, o app mostra **só** esse painel. Finalizar, descartar e as outras telas exigem desbloquear ("Desbloquear e abrir o app" chama o desbloqueio do Android).
+  - Ao apagar a tela, o app já troca para o painel, para nenhuma outra tela aparecer por um instante ao ligar de novo. Ao desbloquear (`USER_PRESENT`), volta ao normal.
+  - Fora de um treino, o app não aparece por cima do bloqueio.
+  - **Limite:** se o celular for bloqueado com outro app na frente, o painel não aparece (o Android não deixa um app se abrir sozinho por cima de outro).
   - **Navegador:** para quando a tela apaga, então serve só para testar.
     - Se o GPS demorar ("Timeout expired") ou a localização estiver indisponível, a gravação não para: o app avisa, recomeça a busca sozinho e usa a posição aproximada (Wi-Fi/rede) para centralizar o mapa.
     - **No PC**, o Chrome/Edge usa a localização do Windows (Configurações → Privacidade e segurança → Localização, com "Permitir que aplicativos da área de trabalho acessem sua localização" ligado), que vem do Wi-Fi. PC só no cabo costuma não ter posição, e a precisão (±50 m ou pior) não basta para o trajeto.

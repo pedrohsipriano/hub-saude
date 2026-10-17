@@ -5,6 +5,7 @@ import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import AlarmOverlay from './components/AlarmOverlay/AlarmOverlay.jsx'
 import Layout from './components/Layout/Layout.jsx'
 import RecordingBanner from './components/RecordingBanner/RecordingBanner.jsx'
+import LockScreenWorkout from './components/LockScreenWorkout/LockScreenWorkout.jsx'
 import { assignWeighing } from './devices/scale/assignUser.js'
 import { mealsOfDay } from './diet/dietPlan.js'
 import { latestWeightByUser } from './devices/scale/weighings.js'
@@ -18,6 +19,7 @@ import { useUsers } from './hooks/useUsers.js'
 import { useWater } from './hooks/useWater.js'
 import { useWatch } from './hooks/useWatch.js'
 import { useWorkoutRecorder } from './hooks/useWorkoutRecorder.js'
+import { useLockScreen } from './hooks/useLockScreen.js'
 import { DEFAULT_USER_ID } from './hub/hub.js'
 import HomePage from './pages/HomePage/HomePage.jsx'
 import { DEFAULT_ALARM, DEFAULT_WATER_REMINDER } from './reminders/reminders.js'
@@ -122,6 +124,8 @@ export default function App() {
   const reminders = useReminders({ plan: phonePlan, settings, waterGoalMl: phoneWater.goal.goalMl, onAction: handleAlarmAction })
   // Treino em andamento (GPS e cronômetro continuam ao trocar de aba).
   const recorder = useWorkoutRecorder()
+  // Durante o treino, o app aparece por cima da tela bloqueada (só com o painel do treino).
+  const lockScreen = useLockScreen(Boolean(recorder.recording))
 
   /** Atalho para o cadastro/troca de perfil. */
   const goToProfile = () => {
@@ -180,6 +184,11 @@ export default function App() {
         phoneOwner={phoneOwner}
       />
     )
+  }
+
+  // Tela bloqueada durante um treino: só o painel do treino, nada do resto do app sem desbloquear.
+  if (lockScreen.locked && recorder.recording) {
+    return <LockScreenWorkout recorder={recorder} onUnlock={lockScreen.unlock} />
   }
 
   return (

@@ -1,5 +1,6 @@
-// Página do Relatório de Progresso. O botão "Gerar PDF" abre a impressão do navegador
-// (destino "Salvar como PDF"); o CSS de impressão esconde o menu e deixa só o relatório.
+// Página do Relatório de Progresso. O botão "Gerar PDF" abre a impressão do sistema (destino "Salvar como PDF"):
+// no navegador, window.print(); no app Android, o PrintManager nativo (native/printPage.js).
+// O CSS de impressão esconde o menu e deixa só o relatório.
 import { useMemo, useState } from 'react'
 import ReportSection from '../../components/ReportSection/ReportSection.jsx'
 import SubNav from '../../components/SubNav/SubNav.jsx'
@@ -10,6 +11,7 @@ import { SEX_MALE } from '../../devices/scale/bodyComposition.js'
 import { groupWeighings } from '../../devices/scale/weighings.js'
 import { useDiet } from '../../hooks/useDiet.js'
 import { useMeasurementRows } from '../../hooks/useMeasurementRows.js'
+import { printPage } from '../../native/printPage.js'
 import { buildProgressReport, reportFileName } from '../../report/buildProgressReport.js'
 import { buildCrossRows, hasWatchData } from '../../report/crossMetrics.js'
 import { GOOD_DIET_PCT, GOOD_TRAINING_MIN, weeklyFindings, weeklyRows } from '../../report/weeklyCross.js'
@@ -33,6 +35,7 @@ const REPORT_PERIODS = [
 export default function ReportPage({ profile, onEditProfile }) {
   const now = useNow()
   const [periodId, setPeriodId] = useState('all')
+  const [printError, setPrintError] = useState(null) // falha ao abrir a impressão
   const period = REPORT_PERIODS.find((p) => p.id === periodId)
   // Início do período (null = todas as pesagens).
   const since = period.days ? now - period.days * DAY_MS : null
@@ -83,14 +86,10 @@ export default function ReportPage({ profile, onEditProfile }) {
 
   /** Abre a impressão com o nome do arquivo no padrão NOMERelatorioProgressoDDMMAAAA. */
   const handlePrint = () => {
-    const previousTitle = document.title
-    document.title = reportFileName(profile.name || 'Usuario', report.latest.timestamp)
-    const restoreTitle = () => {
-      document.title = previousTitle
-      window.removeEventListener('afterprint', restoreTitle)
-    }
-    window.addEventListener('afterprint', restoreTitle)
-    window.print()
+    setPrintError(null)
+    printPage(reportFileName(profile.name || 'Usuario', report.latest.timestamp)).catch((error) =>
+      setPrintError(`Não foi possível abrir a impressão: ${error.message}`),
+    )
   }
 
   const values = report.latest.values
@@ -128,6 +127,7 @@ export default function ReportPage({ profile, onEditProfile }) {
           Gerar PDF
         </button>
         <p className={ui.hint}>Na janela de impressão, escolha o destino &quot;Salvar como PDF&quot;.</p>
+        {printError && <p className={ui.error}>{printError}</p>}
       </div>
 
       <div className={styles.report}>

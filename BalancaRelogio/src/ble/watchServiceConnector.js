@@ -4,13 +4,13 @@
 //   connect() → { name, address, state, write(bytes), subscribe(listener), onDisconnect(listener),
 //                 onState(listener), detach(), disconnect() }
 import { BleClient } from '@capacitor-community/bluetooth-le'
-import { registerPlugin } from '@capacitor/core'
+import { HubBackground } from '../native/hubBackground.js'
 import { bytesToHex, hexToBytes } from '../utils/hex.js'
 import { ensureNativeBle } from './nativeBle.js'
 import { NJJ_SERVICE_UUID } from './webBluetoothWatchConnector.js'
 
-/** Plugin do próprio app (android/app/src/main/java/com/hubsaude/app/HubBackgroundPlugin.java). */
-export const HubBackground = registerPlugin('HubBackground')
+// Plugin do próprio app, registrado em native/hubBackground.js (reexportado para as telas do relógio).
+export { HubBackground }
 
 // Quanto esperar a primeira conexão antes de devolver o controle à tela (o serviço continua tentando).
 const CONNECT_WAIT_MS = 25000

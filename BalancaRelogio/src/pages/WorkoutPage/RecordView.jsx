@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import LazyRouteMap from '../../components/RouteMap/LazyRouteMap.jsx'
 import { useClock } from '../../hooks/useClock.js'
+import { NOW_BAR_GRANT_COMMAND, useNowBarStatus } from '../../hooks/useNowBarStatus.js'
 import { usePersistentState } from '../../hooks/usePersistentState.js'
 import ui from '../../styles/controls.module.css'
 import { ACTIVITY_TYPES } from '../../workouts/activityTypes.js'
@@ -46,6 +47,8 @@ export default function RecordView({ user, recorder, onFinished }) {
   const [error, setError] = useState(null)
   const { recording, live, lastFix, gpsError, saving } = recorder
   const now = useClock(recording?.status === 'recording')
+  // Samsung: falta a permissão para o treino aparecer na Now Bar?
+  const nowBar = useNowBarStatus()
 
   // ---- Nenhum treino em andamento: escolher o exercício ----
   if (!recording) {
@@ -74,6 +77,12 @@ export default function RecordView({ user, recorder, onFinished }) {
               : 'No navegador o GPS para quando a tela apaga ou a aba sai da frente. Para treinos de verdade, use o app Android.'
             : 'Sem GPS: conta o tempo e estima as calorias.'}
         </p>
+        {nowBar?.supported && !nowBar.permission && (
+          <p className={ui.hint}>
+            Now Bar da Samsung: para o treino aparecer nela, rode uma vez no PC, com o celular no cabo (é preciso repetir se
+            reinstalar o app): <code>{NOW_BAR_GRANT_COMMAND}</code>
+          </p>
+        )}
         <div className={ui.actions}>
           <button type="button" className={`${ui.button} ${ui.buttonPrimary} ${styles.bigButton}`} onClick={() => recorder.start(selected.id, user.userId)}>
             Iniciar {selected.label.toLowerCase()}
