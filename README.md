@@ -25,6 +25,40 @@ Ordem de implementação: balança primeiro (mais simples), depois o relógio.
 
 **No GitHub:** o código, o projeto Android, as ferramentas e esta documentação. Ficam **fora** do repositório (ver `.gitignore`): os APKs oficiais, os logs HCI e bugreports (têm o texto das notificações), os prints das pesagens, o plano alimentar e os relatórios em PDF, e o `.env.local` com a chave do Google Maps. Nos quadros de teste, os **endereços MAC** e a **data de nascimento** gravada no relógio foram trocados por valores fictícios.
 
+## Baixar e usar (APK para Android)
+
+1. No celular Android, baixe o **[hub-saude-1.1.0.apk](https://github.com/pedrohsipriano/hub-saude/raw/main/releases/hub-saude-1.1.0.apk)** (pasta [`releases/`](releases/), ~8 MB).
+   - SHA-256 da 1.1.0: `c7c237534c61dd6dc1f8ebb728d3a1fd458f8a744acf3fc0332b71f9a0d6409a`.
+2. Abra o arquivo baixado. O Android pede para **permitir a instalação de apps desta fonte** (o navegador ou o gerenciador de arquivos): permita e toque em **Instalar**.
+   - Se o Play Protect avisar "app desconhecido", toque em "Mais detalhes → Instalar assim mesmo". O APK não vem da Play Store, por isso o aviso.
+3. Primeiro uso:
+   - em **Mais → Perfis**, crie o seu perfil (altura, data de nascimento e sexo; a balança usa para a composição corporal);
+   - em **Aparelhos**, toque em **Conectar** na balança (suba nela para acordá-la) ou no relógio. Feche o app oficial do relógio antes, porque ele aceita um app por vez;
+   - em **Mais → Integrações**, conecte o Health Connect (Samsung Health / Google), se quiser;
+   - na tela do Relógio, libere o acesso às notificações e a economia de bateria para o relógio ficar conectado com o app fechado.
+
+**Sobre o APK publicado:**
+- **Mapas:** vem **sem chave do Google Maps** e usa o OpenStreetMap, que é gratuito. Ele é gerado com `npm run android:public`, que lê o `.env.public` (chaves vazias) por cima do `.env.local`. Para usar o Google Maps, gere o seu próprio APK com a sua chave no `.env.local` (`npm run android:sync`; ver "Google Maps (opcional)").
+- **Atualizações:** é um APK de depuração (assinatura de desenvolvimento). As versões novas publicadas em `releases/` instalam por cima, mantendo os dados.
+- **Aparelhos:** feito num Galaxy S24 Ultra para a balança Original Line (OKOK) e o relógio WATCH X PRO (Microwear/MActivePro); algumas partes ainda estão em teste (ver "Estado atual"). Outros modelos OKOK/NJJ podem funcionar se usarem os mesmos protocolos.
+
+## Licença e créditos
+
+**Uso livre, com créditos e sem fins lucrativos.** O projeto usa a licença **[Creative Commons BY-NC 4.0](LICENSE)** ([resumo em português](https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br)).
+- **Pode:** usar, copiar, modificar e redistribuir o código e o app.
+- **Desde que:** dê os créditos, com o link do repositório, e indique se fez alterações. Exemplo: "Baseado no Hub de Saúde, de Pedro Henrique — https://github.com/pedrohsipriano/hub-saude".
+- **É proibido o uso com fins lucrativos:** vender o app ou o código, cobrar pelo uso ou incluí-lo em produto ou serviço pago.
+
+**Referências usadas na engenharia reversa** (créditos aos autores):
+- [openScale](https://github.com/oliexdev/openScale): tabela das variantes das balanças OKOK.
+- [NJJBle](https://github.com/SoarY/NJJBle): nomes dos comandos do protocolo NJJ do relógio.
+- App **OKOK** (Chipsea): as fórmulas de composição corporal foram observadas no app e reimplementadas aqui.
+- Mapas e bibliotecas, cada um com a sua licença: [OpenStreetMap](https://www.openstreetmap.org/copyright) (© colaboradores do OpenStreetMap), [Leaflet](https://leafletjs.com), [pdf.js](https://mozilla.github.io/pdf.js/), [Capacitor](https://capacitorjs.com) e os plugins listados no `package.json`.
+
+Este projeto não tem ligação com os fabricantes da balança, do relógio nem dos apps oficiais. As marcas citadas pertencem aos seus donos.
+
+**Saúde:** os valores de composição corporal, as metas de água e as calorias são **estimativas** e não substituem avaliação médica ou nutricional.
+
 ## Como fazer o mesmo com a sua balança ou relógio
 
 Este é o caminho usado aqui para descobrir os dois protocolos sem documentação do fabricante. Ele serve para outras balanças e relógios OEM parecidos.
@@ -114,6 +148,7 @@ adb install -r "<caminho acima>"
 # mostram "versão X · gerada em …" para conferir o que está instalado.
 npm run android:open   # abre o projeto no Android Studio (botão Run → celular no USB)
 npm run android:run    # build + sync + instala direto no celular conectado
+npm run android:public # build público: sem as chaves do Google (usa o .env.public); é o APK de releases/
 
 # Lê um PDF de plano alimentar com os leitores do app (para testar um modelo novo de PDF)
 npm run diet:pdf -- "<arquivo.pdf>" [saida.json]
