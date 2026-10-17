@@ -1,0 +1,12 @@
+{
+  "appId": "com.hubsaude.app",
+  "appName": "Hub de Saúde",
+  "webDir": "dist",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "initialViewportFitValueHint": "cover",
+      "style": "DARK"
+    }
+  }
+}

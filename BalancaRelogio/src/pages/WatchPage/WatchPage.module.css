@@ -1,0 +1,146 @@
+/* Página do relógio. */
+
+.owner {
+  margin-bottom: var(--space-4);
+}
+
+.status {
+  margin: 0;
+}
+
+/* Cartões de "agora" */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+}
+
+.tile-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.tile-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Gráficos lado a lado em telas largas */
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 0 var(--space-5);
+}
+
+.sleep {
+  margin: 0;
+}
+
+.checkbox {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+/* Teste do sono: respostas do relógio (texto + bytes). */
+.probe-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.probe-hex {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  word-break: break-all;
+}
+
+/* Notificações no relógio. */
+.options {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-3) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ok {
+  color: var(--tone-excellent);
+  font-weight: var(--font-weight-bold);
+  margin: var(--space-3) 0 0;
+}
+
+.warn {
+  color: var(--tone-high);
+  font-weight: var(--font-weight-bold);
+  margin: var(--space-3) 0 0;
+}
+
+.app-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Nome do app à esquerda e o ícone do relógio à direita (empilha em telas estreitas). */
+.app-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-row select {
+  max-width: 190px;
+}
+
+.app-count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Registro da conexão (texto de diagnóstico). */
+.connection-log {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  max-height: 260px;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  font-size: var(--font-size-xs);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Bluetooth do celular: situação do relógio. */
+.bt-list {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

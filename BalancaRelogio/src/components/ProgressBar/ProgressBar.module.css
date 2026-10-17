@@ -1,0 +1,18 @@
+/* Barra de progresso. */
+.bar {
+  display: block;
+  width: 100%;
+  height: 8px;
+}
+
+.track {
+  fill: var(--color-surface-alt);
+}
+
+.fill {
+  fill: var(--color-primary);
+}
+
+.done {
+  fill: var(--color-accent);
+}

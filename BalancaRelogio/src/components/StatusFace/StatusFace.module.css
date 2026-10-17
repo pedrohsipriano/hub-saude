@@ -1,0 +1,39 @@
+/* Carinha de status. */
+
+.face {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.eye {
+  fill: var(--color-text);
+}
+
+.mouth {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+/* A cor do rosto vem do tom da faixa. */
+.tone-low .head {
+  fill: var(--tone-low);
+}
+
+.tone-good .head {
+  fill: var(--tone-good);
+}
+
+.tone-excellent .head {
+  fill: var(--tone-excellent);
+}
+
+.tone-high .head {
+  fill: var(--tone-high);
+}
+
+.tone-danger .head {
+  fill: var(--tone-danger);
+}

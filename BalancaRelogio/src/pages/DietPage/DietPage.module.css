@@ -1,0 +1,291 @@
+/* Aba Dieta. */
+
+/* Linha do tempo das refeições do dia. */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.meal {
+  margin-bottom: var(--space-3);
+}
+
+.next {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.done {
+  opacity: 0.7;
+}
+
+/* Refeição que não foi feita corretamente: borda laranja. */
+.off {
+  border-left: 4px solid var(--tone-high);
+}
+
+.status-chip {
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+
+.chip-done {
+  color: var(--tone-excellent);
+  border: 1px solid var(--tone-excellent);
+}
+
+.chip-off {
+  color: var(--tone-high);
+  border: 1px solid var(--tone-high);
+}
+
+.meal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.off-button {
+  background: var(--color-surface);
+  color: var(--tone-high);
+  border-color: var(--tone-high);
+}
+
+.undo {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  min-height: var(--tap-size);
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Histórico da dieta. */
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.history-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.history-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.off-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.meal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.time {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  min-width: 3.2em;
+}
+
+.meal-name {
+  flex: 1;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.option {
+  margin-top: var(--space-3);
+}
+
+.option-title {
+  cursor: pointer;
+  min-height: var(--tap-size);
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.items {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item-main {
+  display: block;
+}
+
+.substitutes {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Lista de compras. */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.shopping {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2 220px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-size);
+  break-inside: avoid;
+}
+
+.checked {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.guidelines {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Lista de planos. */
+.plans {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.plan-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.plan-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.plan-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.plan-name {
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-on-primary);
+  background: var(--color-accent);
+  border-radius: 999px;
+  padding: 2px var(--space-2);
+}
+
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.editor-title {
+  font-size: var(--font-size-md);
+  margin: var(--space-4) 0 var(--space-3);
+}
+
+.message {
+  margin: 0;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-size);
+  margin-bottom: var(--space-2);
+}
+
+/* Editor do plano. */
+.editor-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-3);
+}
+
+.textarea {
+  max-width: none;
+  width: 100%;
+  font-size: var(--font-size-sm);
+  resize: vertical;
+}
+
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+/* O input de arquivo fica invisível sobre o botão (o rótulo abre o seletor). */
+.file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Água: quantidade livre. */
+.custom-water {
+  margin-top: var(--space-4);
+}
+
+.custom-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin: var(--space-1) 0 var(--space-3);
+}

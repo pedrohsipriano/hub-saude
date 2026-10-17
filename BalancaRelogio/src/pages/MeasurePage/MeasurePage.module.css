@@ -1,0 +1,43 @@
+/* Página de medição. */
+
+.status {
+  margin: 0;
+}
+
+/* Cartão do peso ao vivo */
+.live {
+  text-align: center;
+}
+
+.phase {
+  display: inline-block;
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.measuring {
+  background: var(--tone-low);
+  color: var(--color-text);
+}
+
+.final {
+  background: var(--tone-good);
+  color: var(--color-text);
+}
+
+.weight {
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  margin: var(--space-3) 0 0;
+  line-height: 1.1;
+}
+
+.unit {
+  font-size: var(--font-size-lg);
+  margin-left: var(--space-2);
+  color: var(--color-text-muted);
+}

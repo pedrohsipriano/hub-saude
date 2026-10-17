@@ -1,0 +1,5 @@
+/* Destaque do cartão de atribuição de pesagem. */
+.assign {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}

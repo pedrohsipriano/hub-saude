@@ -1,0 +1,46 @@
+/* Gráfico de tendência do peso. */
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.axis {
+  stroke: var(--color-border);
+}
+
+.axis-label {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.dot {
+  fill: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.goal {
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.goal-label {
+  fill: var(--color-accent);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+}
+
+/* Pesagem fora da curva: círculo vazado, ignorada na média. */
+.outlier {
+  fill: none;
+  stroke: var(--tone-high);
+  stroke-width: 1.5;
+}

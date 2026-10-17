@@ -1,0 +1,65 @@
+/* Mapa do trajeto: contêiner com altura fixa (o Leaflet exige) e cores dos traços/marcadores. */
+.map {
+  height: 320px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  /* Abaixo do cabeçalho fixo e da barra de abas. */
+  z-index: 0;
+  position: relative;
+}
+
+/* Durante a gravação o mapa ocupa boa parte da tela do celular. */
+.live {
+  height: 45vh;
+  min-height: 260px;
+}
+
+/* Traço do trajeto (o CSS vence os atributos de cor que o Leaflet coloca no SVG). */
+.route {
+  stroke: var(--color-route);
+  stroke-opacity: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Marcadores: início (verde), fim (vermelho) e posição atual (azul). */
+.start,
+.end,
+.current {
+  stroke: var(--color-surface);
+}
+
+.start {
+  fill: var(--tone-excellent);
+}
+
+.end {
+  fill: var(--tone-danger);
+}
+
+.current {
+  fill: var(--color-primary);
+}
+
+/* Google Maps: marcadores são elementos HTML (bolinhas), com as mesmas cores. */
+.pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.pin-start {
+  background: var(--tone-excellent);
+}
+
+.pin-end {
+  background: var(--tone-danger);
+}
+
+.pin-current {
+  background: var(--color-primary);
+}

@@ -1,0 +1,113 @@
+/* Alarme em tela cheia: cobre tudo (inclusive a barra de abas) e pisca até a pessoa responder. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--space-5) + env(safe-area-inset-top)) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+  color: var(--color-on-primary);
+  animation: flash 1.2s ease-in-out infinite;
+}
+
+/* Cor de cada tipo de lembrete (pisca entre a cor e uma versão mais escura). */
+.water {
+  --alarm-color: var(--color-primary);
+  --alarm-color-dark: var(--color-primary-strong);
+}
+
+.meal {
+  --alarm-color: var(--color-accent);
+  --alarm-color-dark: var(--color-secondary);
+}
+
+.weigh {
+  --alarm-color: var(--color-route);
+  --alarm-color-dark: var(--tone-danger);
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    background: var(--alarm-color);
+  }
+
+  50% {
+    background: var(--alarm-color-dark);
+  }
+}
+
+.panel {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon {
+  font-size: 4.5rem;
+  line-height: 1;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.clock {
+  margin: 0;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.title {
+  font-size: var(--font-size-xl);
+}
+
+.body {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  opacity: 0.95;
+}
+
+.actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* Botões grandes (fáceis de tocar com a tela recém-acesa). */
+.button {
+  min-height: 56px;
+  border-radius: var(--radius);
+  border: 2px solid var(--color-on-primary);
+  background: transparent;
+  color: var(--color-on-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--color-on-primary);
+  color: var(--alarm-color);
+}
+
+/* Sem animação para quem pediu menos movimento no sistema. */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .icon {
+    animation: none;
+    background: var(--alarm-color);
+  }
+}

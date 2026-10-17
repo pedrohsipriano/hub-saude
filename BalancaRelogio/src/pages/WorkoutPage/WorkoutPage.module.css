@@ -1,0 +1,193 @@
+/* Aba Treino: escolha do exercício, cronômetro ao vivo, lista de atividades e detalhe. */
+
+/* Botões dos tipos de exercício (2 colunas no celular). */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-2);
+}
+
+.type-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--tap-size);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.type-selected {
+  border-color: var(--color-route);
+  background: var(--color-surface-alt);
+  font-weight: var(--font-weight-bold);
+}
+
+.gps-tag {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* Botões grandes de Iniciar/Pausar/Finalizar (fáceis de tocar correndo). */
+.big-button {
+  flex: 1;
+  min-height: 56px;
+  font-size: var(--font-size-lg);
+}
+
+.danger-button {
+  background: var(--color-error);
+  color: var(--color-on-primary);
+}
+
+.live-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.badge {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+}
+
+.badge-recording {
+  background: var(--color-route);
+  color: var(--color-on-primary);
+}
+
+.badge-paused {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+/* Cronômetro grande. */
+.timer {
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-align: center;
+  margin: var(--space-3) 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.stat-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.gps-bad {
+  color: var(--tone-high);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  margin: var(--space-2) 0 0;
+}
+
+.confirm {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Lista de atividades. */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.item-name {
+  font-weight: var(--font-weight-bold);
+}
+
+.item-date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.item-line {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Detalhe. */
+.back {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  min-height: var(--tap-size);
+  padding: 0;
+  margin-bottom: var(--space-2);
+  cursor: pointer;
+}
+
+.split-bar-cell {
+  width: 45%;
+}
+
+/* Compartilhar: prévia do vídeo gerado (formato story). */
+.share-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.share-preview {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius);
+  background: var(--share-bg);
+}

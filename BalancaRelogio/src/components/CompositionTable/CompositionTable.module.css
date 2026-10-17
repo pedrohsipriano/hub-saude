@@ -1,0 +1,38 @@
+/* Tabela de composição corporal. */
+
+.detail {
+  color: var(--color-text-muted);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Bolinha colorida com o tom da faixa */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.tone-low {
+  background: var(--tone-low);
+}
+
+.tone-good {
+  background: var(--tone-good);
+}
+
+.tone-excellent {
+  background: var(--tone-excellent);
+}
+
+.tone-high {
+  background: var(--tone-high);
+}
+
+.tone-danger {
+  background: var(--tone-danger);
+}

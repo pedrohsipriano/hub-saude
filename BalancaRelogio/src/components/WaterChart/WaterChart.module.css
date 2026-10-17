@@ -1,0 +1,32 @@
+/* Gráfico da água por dia. */
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.bar {
+  fill: var(--color-primary);
+  opacity: 0.55;
+}
+
+.bar-reached {
+  fill: var(--color-primary);
+}
+
+.goal {
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.goal-label {
+  fill: var(--color-accent);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.label {
+  fill: var(--color-text-muted);
+  font-size: 9px;
+}

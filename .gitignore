@@ -1,0 +1,25 @@
+# APKs oficiais usados só para engenharia reversa
+apk/
+
+# Plano alimentar e relatórios pessoais
+capturas/dieta/
+capturas/Dieta/
+capturas/*.pdf
+
+# Logs do celular: contêm o texto das notificações (dados pessoais)
+capturas/relogio/bugreport*.zip
+capturas/relogio/*.log
+capturas/relogio/att*.txt
+
+# Chaves locais (Google Maps) — nunca vão para o git
+.env.local
+**/.env.local
+
+# Editores e builds locais
+.idea/
+.vscode/
+*.iml
+capturas/**/*.png
+capturas/**/*.jpg
+capturas/**/*.jpeg
+capturas/**/*.mp4

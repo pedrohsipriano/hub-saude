@@ -1,0 +1,37 @@
+/* Barra de faixas de referência. */
+
+.range-bar {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.marker {
+  fill: var(--color-text);
+}
+
+.limit {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+}
+
+.tone-low {
+  fill: var(--tone-low);
+}
+
+.tone-good {
+  fill: var(--tone-good);
+}
+
+.tone-excellent {
+  fill: var(--tone-excellent);
+}
+
+.tone-high {
+  fill: var(--tone-high);
+}
+
+.tone-danger {
+  fill: var(--tone-danger);
+}

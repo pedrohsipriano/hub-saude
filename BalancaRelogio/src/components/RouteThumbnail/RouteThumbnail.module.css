@@ -1,0 +1,26 @@
+/* Miniatura do trajeto (e o quadrado com a sigla quando o treino não tem GPS). */
+.thumb,
+.fallback {
+  width: 96px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-route);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+}

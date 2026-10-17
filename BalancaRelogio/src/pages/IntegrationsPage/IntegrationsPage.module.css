@@ -1,0 +1,146 @@
+/* Página de integrações. */
+
+.status {
+  margin: 0;
+  word-break: break-word;
+}
+
+.options {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.checkbox {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.steps {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Confirmação da sincronização. */
+.summary {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ok {
+  color: var(--tone-excellent);
+  font-weight: var(--font-weight-bold);
+}
+
+.warn {
+  color: var(--tone-high);
+  font-weight: var(--font-weight-bold);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+/* Cartão de status da conexão: borda e ícone na cor do estado. */
+.status-card {
+  border-left-width: 6px;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--color-on-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.status-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.status-service {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.status-text {
+  margin: var(--space-3) 0 0;
+}
+
+/* Cores de cada estado (tokens). */
+.tone-ok {
+  border-left-color: var(--tone-excellent);
+}
+
+.tone-ok .status-icon {
+  background: var(--tone-excellent);
+}
+
+.tone-ok .status-title {
+  color: var(--tone-excellent);
+}
+
+.tone-warn {
+  border-left-color: var(--tone-high);
+}
+
+.tone-warn .status-icon {
+  background: var(--tone-high);
+}
+
+.tone-warn .status-title {
+  color: var(--tone-high);
+}
+
+.tone-error {
+  border-left-color: var(--color-error);
+}
+
+.tone-error .status-icon {
+  background: var(--color-error);
+}
+
+.tone-error .status-title {
+  color: var(--color-error);
+}
+
+.tone-off {
+  border-left-color: var(--color-text-muted);
+}
+
+.tone-off .status-icon {
+  background: var(--color-text-muted);
+}
+
+.tone-pending {
+  border-left-color: var(--color-primary);
+}
+
+.tone-pending .status-icon {
+  background: var(--color-primary);
+}

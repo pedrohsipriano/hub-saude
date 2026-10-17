@@ -1,0 +1,20 @@
+/* Situação do envio automático ao relógio. */
+.ok,
+.pending,
+.error {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.ok {
+  color: var(--tone-excellent);
+  font-weight: var(--font-weight-bold);
+}
+
+.pending {
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-error);
+}

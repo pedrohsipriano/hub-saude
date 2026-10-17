@@ -1,0 +1,180 @@
+/*
+  Variáveis de design (tokens) e estilos base do app.
+  Todas as cores, fontes e espaçamentos vêm daqui; os *.module.css só usam estas variáveis.
+*/
+:root {
+  color-scheme: light dark;
+
+  /* Fonte */
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+  --font-size-display: 4rem;
+  --font-weight-regular: 400;
+  --font-weight-bold: 600;
+
+  /* Cores principais */
+  --color-primary: #1d6fd8;
+  --color-primary-strong: #1557ab;
+  --color-on-primary: #ffffff;
+  --color-secondary: #0f8a7e;
+
+  /* Superfícies e texto */
+  --color-bg: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eef2f7;
+  --color-border: #d9dfe7;
+  --color-text: #1c2430;
+  --color-text-muted: #5b6676;
+  --color-error: #c0392b;
+
+  /* Tons das faixas de referência (Baixo, Saudável, Excelente, Alto, Muito alto) */
+  --tone-low: #f2c94c;
+  --tone-good: #6fcf97;
+  --tone-excellent: #2f9e6e;
+  --tone-high: #f2994a;
+  --tone-danger: #d64545;
+
+  /* Cores de apoio (fundos suaves de destaque) */
+  --color-primary-soft: #e8f1fd;
+  --color-accent: #0f9d8f;
+  --color-accent-soft: #e2f6f3;
+
+  /* Trajeto dos treinos no mapa */
+  --color-route: #fc4c02;
+
+  /* Cartão/vídeo de compartilhamento do treino (sempre escuro, como os stories) */
+  --share-bg: #0f1722;
+  --share-bg-alt: #1d2a3a;
+  --share-text: #ffffff;
+  --share-muted: #93a1b3;
+
+  /* Espaçamento e forma */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --container-width: 1040px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.04);
+
+  /* Celular: barra de abas e área mínima de toque */
+  --nav-height: 64px;
+  --tap-size: 44px;
+}
+
+/*
+  Tema escuro. Vale em dois casos (as cores são as mesmas nos dois blocos):
+  1. automático: o sistema está no modo escuro e o usuário não escolheu "Claro";
+  2. escolhido no app: data-theme="dark" (Mais → Aparência ou o botão do cabeçalho; ver theme/theme.js).
+*/
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-bg: #11161d;
+    --color-surface: #1a212b;
+    --color-surface-alt: #222b37;
+    --color-border: #2e3946;
+    --color-text: #e6ebf1;
+    --color-text-muted: #9aa6b5;
+    --color-primary-soft: #1b2a40;
+    --color-accent-soft: #15302d;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #11161d;
+  --color-surface: #1a212b;
+  --color-surface-alt: #222b37;
+  --color-border: #2e3946;
+  --color-text: #e6ebf1;
+  --color-text-muted: #9aa6b5;
+  --color-primary-soft: #1b2a40;
+  --color-accent-soft: #15302d;
+}
+
+/* Claro escolhido no app: controles nativos (barras de rolagem, campos) também claros. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* Celular: nada vaza para os lados, sem o "puxar e voltar" e sem o destaque azul ao tocar. */
+  overflow-x: clip;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* Gráficos e imagens nunca passam da largura da tela. */
+svg,
+img,
+video {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Evita o zoom automático do iOS/Android em campos com fonte pequena. */
+input,
+select,
+textarea {
+  font-size: max(16px, 1em);
+}
+
+/* Impressão (PDF do relatório): página A4, sempre em tema claro e com as cores das faixas. */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  /* Os mesmos seletores do tema escuro, para o PDF sair claro em qualquer tema. */
+  :root,
+  :root:not([data-theme='light']),
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --color-bg: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-alt: #eef2f7;
+    --color-border: #cfd6df;
+    --color-text: #1c2430;
+    --color-text-muted: #5b6676;
+  }
+
+  body {
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -1,0 +1,95 @@
+/* Bloco de uma métrica no relatório: 3 colunas (resumo, tabela, gráfico). */
+
+.section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.7fr) minmax(0, 1.4fr);
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  break-inside: avoid;
+}
+
+/* Em telas estreitas as colunas empilham. */
+@media (max-width: 720px) {
+  .section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+}
+
+.detail {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.current-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+.current {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  border-radius: 6px;
+  padding: 0 var(--space-2);
+}
+
+.band-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.tone-low {
+  background: var(--tone-low);
+  color: #1c2430;
+}
+
+.tone-good {
+  background: var(--tone-good);
+  color: #1c2430;
+}
+
+.tone-excellent {
+  background: var(--tone-excellent);
+  color: #ffffff;
+}
+
+.tone-high {
+  background: var(--tone-high);
+  color: #1c2430;
+}
+
+.tone-danger {
+  background: var(--tone-danger);
+  color: #ffffff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-xs);
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-1) var(--space-2);
+  text-align: center;
+}
+
+.table th {
+  background: var(--color-surface-alt);
+}
+
+.chart {
+  min-width: 0;
+}

@@ -1,0 +1,33 @@
+/* Gráfico de evolução. */
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.axis {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.dot {
+  fill: var(--color-primary);
+}
+
+.value {
+  fill: var(--color-text);
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+}
+
+.date {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+}

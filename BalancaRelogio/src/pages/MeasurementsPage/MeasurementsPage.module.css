@@ -1,0 +1,6 @@
+/* Medidas corporais: campos em grade (2 colunas no celular). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0 var(--space-3);
+}

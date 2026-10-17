@@ -1,0 +1,17 @@
+/* Estilo da política de privacidade exibida pelo Health Connect (página fora do app React). */
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+  padding: 16px;
+  color: #1c2430;
+  background: #ffffff;
+}
+
+h1 {
+  font-size: 1.4rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+}

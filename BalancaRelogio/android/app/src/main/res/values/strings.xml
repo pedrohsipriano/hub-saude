@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hub de Saúde</string>
+    <string name="title_activity_main">Hub de Saúde</string>
+    <string name="package_name">com.hubsaude.app</string>
+    <string name="custom_url_scheme">com.hubsaude.app</string>
+    <!-- Canal da notificação que aparece enquanto um treino é gravado (plugin background-geolocation). -->
+    <string name="capacitor_background_geolocation_notification_channel_name">Gravação de treino</string>
+</resources>

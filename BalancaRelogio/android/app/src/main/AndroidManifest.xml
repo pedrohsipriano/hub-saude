@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- Serviço "Conectado ao relógio": mantém a conexão Bluetooth mesmo com o app fechado
+             (fora dos recentes), reconecta sozinho e repassa as notificações do celular ao relógio. -->
+        <service
+            android:name=".WatchService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"
+            android:stopWithTask="false" />
+
+        <!-- Depois de ligar o celular (ou atualizar o app), volta a manter o relógio conectado. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Leitor das notificações do celular (liberado pelo usuário em "Acesso a notificações"),
+             para repassá-las ao relógio. -->
+        <service
+            android:name=".HubNotificationListener"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Localização: GPS dos treinos (todas as versões) e, até o Android 11, exigida pelo scan BLE.
+         O serviço em primeiro plano (FOREGROUND_SERVICE_LOCATION) e a notificação da gravação
+         vêm do manifesto do plugin @capacitor-community/background-geolocation. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Bluetooth (balança e relógio). Android 12+: scan sem localização (neverForLocation),
+         combinado com BleClient.initialize({ androidNeverForLocation: true }) em src/ble/nativeBle.js. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- Segundo plano: serviço de dispositivo conectado (relógio) e pedido para sair da economia de bateria. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- As permissões do Health Connect (peso, gordura, TMB, passos, FC, SpO2, pressão, sono)
+         vêm do manifesto do plugin @capgo/capacitor-health. -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <!-- O plugin de GPS declara o GPS como obrigatório; aqui fica opcional (o app funciona sem). -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"
+        tools:replace="android:required" />
+</manifest>

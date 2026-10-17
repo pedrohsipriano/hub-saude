@@ -1,0 +1,37 @@
+/* Histórico: marcação das pesagens fora da curva e botões de apagar. */
+.outlier-row td {
+  color: var(--color-text-muted);
+}
+
+.outlier-tag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  border: 1px solid var(--tone-high);
+  color: var(--tone-high);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.link,
+.danger {
+  border: none;
+  background: none;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  min-height: var(--tap-size);
+  padding: 0 var(--space-2);
+}
+
+.link {
+  color: var(--color-primary);
+}
+
+.danger {
+  color: var(--color-error);
+}
